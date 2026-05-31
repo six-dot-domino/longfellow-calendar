@@ -492,6 +492,11 @@ function formatDateCol(ev, dateObj) {
     return recurrence;
   }
 
+  // Expanded recurring — use the specific occurrence date directly
+  if (!ev._collapsed && recurrence && dateObj) {
+    return `${DAYS_ABBR[dateObj.getDay()]} ${MONTHS_ABBR[dateObj.getMonth()]} ${dateObj.getDate()}`;
+  }
+
   if (!dateObj) {
     if (ev.Date && /all month/i.test(ev.Date)) return 'All month';
     if (ev.Date && /^Week of/i.test(ev.Date)) {
