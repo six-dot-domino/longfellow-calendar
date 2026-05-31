@@ -276,25 +276,40 @@
     color: var(--ink-light);
   }
 
-  .col-title { }
+  .col-title { font-weight: bold; }
 
-  .event-table a {
+  .event-table .col-title a {
     color: var(--ink);
     text-decoration: underline;
     text-decoration-color: var(--border);
     text-underline-offset: 2px;
     transition: text-decoration-color 0.15s, color 0.15s;
+    font-weight: bold;
   }
 
-  .event-table a:hover {
+  .event-table .col-title a:hover {
     color: var(--teal);
     text-decoration-color: var(--teal);
+  }
+
+  .venue-link {
+    color: var(--ink-light);
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--border);
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .venue-link:hover {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
   }
 
   .event-age {
     font-style: italic;
     color: var(--ink-faint);
     font-size: 15px;
+    font-weight: normal;
   }
 
   .is-past td { opacity: 0.5; }
@@ -453,6 +468,12 @@ function dowIndex(recurrence) {
   return map[(recurrence||'').toLowerCase().trim()] ?? -1;
 }
 
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
+}
+
 function isPast(dateObj) {
   if (!dateObj) return false;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -460,59 +481,29 @@ function isPast(dateObj) {
   return d < today;
 }
 
-function isDateFiltering() {
-  return !!(document.getElementById('date-from').value);
-}
-
-function dateMatchesFilter(dateObj, fromVal, toVal) {
-  if (!dateObj) return false;
-  const d = new Date(dateObj); d.setHours(0,0,0,0);
-  if (fromVal) {
-    const from = new Date(fromVal + 'T00:00:00');
-    if (toVal) {
-      const to = new Date(toVal + 'T00:00:00');
-      return d >= from && d <= to;
-    }
-    return d.getTime() === from.getTime();
-  }
-  return true;
-}
-
 function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function formatDateCol(ev, dateObj) {
-  const recurrence = (ev.Recurrence || '').trim();
-
-  // Collapsed recurring — write out full plural day name
-  if (ev._collapsed && recurrence) {
+function formatDateCol(dateObj, originalDate, collapsed, recurrence) {
+  if (collapsed && recurrence) {
     const dow = dowIndex(recurrence);
-    if (dow >= 0) return DAYS_FULL[dow] + 's';
-    return recurrence;
+    return dow >= 0 ? DAYS_FULL[dow] + 's' : recurrence;
   }
-
-  // Expanded recurring — use the specific occurrence date directly
-  if (!ev._collapsed && recurrence && dateObj) {
-    return `${DAYS_ABBR[dateObj.getDay()]} ${MONTHS_ABBR[dateObj.getMonth()]} ${dateObj.getDate()}`;
-  }
-
   if (!dateObj) {
-    if (ev.Date && /all month/i.test(ev.Date)) return 'All month';
-    if (ev.Date && /^Week of/i.test(ev.Date)) {
-      const m = ev.Date.match(/^Week of\s+(\w+)\s+(\d+)/i);
+    if (originalDate && /all month/i.test(originalDate)) return 'All month';
+    if (originalDate && /^Week of/i.test(originalDate)) {
+      const m = originalDate.match(/^Week of\s+(\w+)\s+(\d+)/i);
       if (m) {
         const mi = MONTHS.findIndex(mo => mo.toLowerCase() === m[1].toLowerCase());
         const d = new Date(new Date().getFullYear(), mi >= 0 ? mi : 0, parseInt(m[2]));
         return `Wk. of ${DAYS_ABBR[d.getDay()]} ${MONTHS_ABBR[d.getMonth()]} ${d.getDate()}`;
       }
     }
-    return ev.Date || '';
+    return originalDate || '';
   }
-
-  // Date range e.g. "June 12-14"
-  if (ev.Date && /^(\w+)\s+(\d+)-(\d+)$/.test(ev.Date)) {
-    const m = ev.Date.match(/^(\w+)\s+(\d+)-(\d+)$/);
+  if (originalDate && /^(\w+)\s+(\d+)-(\d+)$/.test(originalDate)) {
+    const m = originalDate.match(/^(\w+)\s+(\d+)-(\d+)$/);
     const mi = MONTHS.findIndex(mo => mo.toLowerCase() === m[1].toLowerCase());
     if (mi >= 0) {
       const d1 = new Date(new Date().getFullYear(), mi, parseInt(m[2]));
@@ -520,9 +511,14 @@ function formatDateCol(ev, dateObj) {
       return `${DAYS_ABBR[d1.getDay()]}–${DAYS_ABBR[d2.getDay()]} ${MONTHS_ABBR[mi]} ${m[2]}–${m[3]}`;
     }
   }
-
-  // Standard single date
   return `${DAYS_ABBR[dateObj.getDay()]} ${MONTHS_ABBR[dateObj.getMonth()]} ${dateObj.getDate()}`;
+}
+
+function updateScrollMargin() {
+  const headerHeight = document.querySelector('header').offsetHeight;
+  document.querySelectorAll('.category-section').forEach(el => {
+    el.style.scrollMarginTop = (headerHeight + 16) + 'px';
+  });
 }
 
 function render() {
@@ -530,7 +526,11 @@ function render() {
   const toVal = document.getElementById('date-to').value;
   const keyword = document.getElementById('keyword-input').value.toLowerCase().trim();
   const showPast = document.getElementById('show-past').checked;
-  const dateFiltering = isDateFiltering();
+
+  // Parse filter dates once
+  const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+  const toDate = toVal ? new Date(toVal + 'T00:00:00') : (fromDate ? new Date(fromVal + 'T00:00:00') : null);
+  const dateFiltering = !!fromDate;
 
   const byCategory = {};
   CATEGORY_ORDER.forEach(cat => { byCategory[cat] = []; });
@@ -540,58 +540,65 @@ function render() {
     const cat = ev.Category || 'Etc.';
     if (!byCategory[cat]) byCategory[cat] = [];
 
-    if (recurrence && !dateFiltering) {
-      const key = `${recurrence}|${ev.Location}|${ev.Title}`;
-      if (!byCategory[cat]._rkeys) byCategory[cat]._rkeys = new Set();
-      if (byCategory[cat]._rkeys.has(key)) return;
+    function passesKeywordVenue() {
       if (keyword) {
-        const haystack = [ev.Title, ev.Location, ev.Category, recurrence].join(' ').toLowerCase();
-        if (!haystack.includes(keyword)) return;
+        const hay = [ev.Title, ev.Location, ev.Category, recurrence].join(' ').toLowerCase();
+        if (!hay.includes(keyword)) return false;
       }
       if (selectedVenues.length > 0) {
         const loc = (ev.Location || '').toLowerCase();
-        if (!selectedVenues.some(v => loc === v.toLowerCase())) return;
+        if (!selectedVenues.some(v => loc === v.toLowerCase())) return false;
       }
-      byCategory[cat]._rkeys.add(key);
-      byCategory[cat].push({ ...ev, _collapsed: true, _dateObj: null, _sortKey: Infinity });
+      return true;
+    }
 
-    } else if (recurrence && dateFiltering) {
+    if (recurrence) {
       const dow = dowIndex(recurrence);
       if (dow < 0) return;
       const startObj = parseFlexDate(ev['Recurrence Start'] || ev.Date);
       const endObj = parseFlexDate(ev['Recurrence End']);
       if (!startObj || !endObj) return;
-      const cursor = new Date(startObj);
-      while (cursor.getDay() !== dow) cursor.setDate(cursor.getDate() + 1);
-      while (cursor <= endObj) {
-        const dateObj = new Date(cursor);
-        if (!showPast && isPast(dateObj)) { cursor.setDate(cursor.getDate() + 7); continue; }
-        if (!dateMatchesFilter(dateObj, fromVal, toVal)) { cursor.setDate(cursor.getDate() + 7); continue; }
-        if (keyword) {
-          const haystack = [ev.Title, ev.Location, ev.Category].join(' ').toLowerCase();
-          if (!haystack.includes(keyword)) { cursor.setDate(cursor.getDate() + 7); continue; }
+
+      if (!dateFiltering) {
+        // Collapsed — show once, deduplicated by key
+        const key = `${recurrence}|${ev.Location}|${ev.Title}`;
+        if (!byCategory[cat]._rkeys) byCategory[cat]._rkeys = new Set();
+        if (byCategory[cat]._rkeys.has(key)) return;
+        if (!passesKeywordVenue()) return;
+        byCategory[cat]._rkeys.add(key);
+        byCategory[cat].push({ ev, collapsed: true, dateObj: null, sortKey: Infinity });
+      } else {
+        // Find occurrences within the date range — one per matching date only
+        const cursor = new Date(startObj);
+        while (cursor.getDay() !== dow) cursor.setDate(cursor.getDate() + 1);
+
+        while (cursor <= endObj) {
+          const d = new Date(cursor);
+          d.setHours(0,0,0,0);
+
+          // Check if this specific occurrence falls in the filter range
+          const inRange = d >= fromDate && d <= toDate;
+          if (inRange) {
+            if (!showPast && isPast(d)) { cursor.setDate(cursor.getDate() + 7); continue; }
+            if (!passesKeywordVenue()) { cursor.setDate(cursor.getDate() + 7); continue; }
+            // Add this single occurrence and stop — we only want the matching one(s)
+            byCategory[cat].push({ ev, collapsed: false, dateObj: new Date(d), sortKey: d.getTime() });
+          }
+          cursor.setDate(cursor.getDate() + 7);
         }
-        if (selectedVenues.length > 0) {
-          const loc = (ev.Location || '').toLowerCase();
-          if (!selectedVenues.some(v => loc === v.toLowerCase())) { cursor.setDate(cursor.getDate() + 7); continue; }
-        }
-        byCategory[cat].push({ ...ev, _collapsed: false, _dateObj: new Date(dateObj), _sortKey: dateObj.getTime() });
-        cursor.setDate(cursor.getDate() + 7);
       }
 
     } else {
+      // One-time event
       const dateObj = parseFlexDate(ev.Date);
       if (!showPast && isPast(dateObj)) return;
-      if (dateFiltering && !dateMatchesFilter(dateObj, fromVal, toVal)) return;
-      if (keyword) {
-        const haystack = [ev.Title, ev.Location, ev.Category, ev.Date].join(' ').toLowerCase();
-        if (!haystack.includes(keyword)) return;
+      if (dateFiltering) {
+        if (!dateObj) return;
+        const d = new Date(dateObj); d.setHours(0,0,0,0);
+        if (d < fromDate || d > toDate) return;
       }
-      if (selectedVenues.length > 0) {
-        const loc = (ev.Location || '').toLowerCase();
-        if (!selectedVenues.some(v => loc === v.toLowerCase())) return;
-      }
-      byCategory[cat].push({ ...ev, _collapsed: false, _dateObj: dateObj, _sortKey: dateObj ? dateObj.getTime() : Infinity });
+      if (!passesKeywordVenue()) return;
+      byCategory[cat].push({ ev, collapsed: false, dateObj, sortKey: dateObj ? dateObj.getTime() : Infinity });
     }
   });
 
@@ -629,29 +636,32 @@ function render() {
 
   let html = '';
   activeCats.forEach(cat => {
-    const events = byCategory[cat];
-    events.sort((a, b) => {
-      if (a._collapsed && b._collapsed) return 0;
-      if (a._collapsed) return 1;
-      if (b._collapsed) return -1;
-      return a._sortKey - b._sortKey;
+    const items = byCategory[cat];
+    items.sort((a, b) => {
+      if (a.collapsed && b.collapsed) return 0;
+      if (a.collapsed) return 1;
+      if (b.collapsed) return -1;
+      return a.sortKey - b.sortKey;
     });
 
     html += `<section class="category-section" id="cat-${slugify(cat)}">`;
     html += `<h2 class="category-header">${cat}</h2>`;
     html += `<table class="event-table"><tbody>`;
 
-    events.forEach(ev => {
-      const past = !ev._collapsed && isPast(ev._dateObj);
-      const dateCol = formatDateCol(ev, ev._dateObj);
+    items.forEach(({ ev, collapsed, dateObj }) => {
+      const past = !collapsed && isPast(dateObj);
+      const dateCol = formatDateCol(dateObj, ev.Date, collapsed, ev.Recurrence);
       const titleHtml = ev.URL
         ? `<a href="${ev.URL}" target="_blank" rel="noopener">${ev.Title}</a>`
-        : ev.Title;
+        : `<span>${ev.Title}</span>`;
       const ageHtml = ev['Age Range'] ? ` <span class="event-age">(${ev['Age Range']})</span>` : '';
+      const venueHtml = ev.Location
+        ? `<span class="venue-link" data-venue="${ev.Location.replace(/"/g,'&quot;')}">${ev.Location}</span>`
+        : '';
 
       html += `<tr${past ? ' class="is-past"' : ''}>`;
       html += `<td class="col-date">${dateCol}</td>`;
-      html += `<td class="col-venue">${ev.Location || ''}</td>`;
+      html += `<td class="col-venue">${venueHtml}</td>`;
       html += `<td class="col-title">${titleHtml}${ageHtml}</td>`;
       html += `</tr>`;
     });
@@ -661,6 +671,18 @@ function render() {
 
   cal.innerHTML = html;
   updateScrollMargin();
+
+  // Venue click handler
+  document.querySelectorAll('.venue-link').forEach(el => {
+    el.addEventListener('click', () => {
+      const venue = el.dataset.venue;
+      if (!selectedVenues.includes(venue)) {
+        selectedVenues.push(venue);
+        renderVenueTags();
+        render();
+      }
+    });
+  });
 }
 
 function buildVenueList() {
@@ -696,13 +718,6 @@ function renderVenueTags() {
   document.getElementById('venue-tags').innerHTML = selectedVenues.map(v =>
     `<span class="venue-tag">${v}<button onclick="removeVenue('${v.replace(/'/g,"\\'")}')" aria-label="Remove ${v}">×</button></span>`
   ).join('');
-}
-
-function updateScrollMargin() {
-  const headerHeight = document.querySelector('header').offsetHeight;
-  document.querySelectorAll('.category-section').forEach(el => {
-    el.style.scrollMarginTop = (headerHeight + 16) + 'px';
-  });
 }
 
 async function init() {
