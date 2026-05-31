@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whenever Wherever: Events Calendar</title>
+<style>
+  :root {
+    --cream: #FAF8F4;
+    --ink: #1a1a18;
+    --ink-light: #5a5a55;
+    --ink-faint: #9a9a93;
+    --red: #c94a3a;
+    --red-light: #f5ece9;
+    --border: #e2dfd8;
+    --white: #ffffff;
+    --font-body: 'Georgia', serif;
+    --font-ui: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .site-name {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    font-family: var(--font-body);
+    font-size: 1.4rem;
+    font-weight: normal;
+    color: var(--ink);
+  }
+
+  h1 span { color: var(--red); }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .filter-group label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .filter-group input[type="date"],
+  .filter-group input[type="text"] {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--white);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .filter-group input[type="date"]:focus,
+  .filter-group input[type="text"]:focus {
+    border-color: var(--red);
+  }
+
+  .filter-group input[type="date"] { width: 150px; }
+  .filter-group input[type="text"] { width: 180px; }
+
+  .venue-wrapper { position: relative; }
+
+  #venue-input {
+    width: 200px;
+    padding-right: 1.5rem;
+  }
+
+  .venue-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    max-width: 400px;
+  }
+
+  .venue-tag {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    background: var(--red-light);
+    color: var(--red);
+    border: 1px solid #e8c5be;
+    border-radius: 3px;
+    padding: 2px 6px 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .venue-tag button {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .venue-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    max-height: 200px;
+    overflow-y: auto;
+    width: 240px;
+    z-index: 200;
+    display: none;
+  }
+
+  .venue-dropdown.open { display: block; }
+
+  .venue-option {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .venue-option:hover { background: var(--cream); }
+
+  .filter-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--ink-light);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { border-color: var(--ink-light); color: var(--ink); }
+
+  .past-toggle {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    align-self: flex-end;
+    padding-bottom: 0.4rem;
+  }
+
+  .past-toggle input { cursor: pointer; accent-color: var(--red); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .results-summary {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .category-section { margin-bottom: 2.5rem; }
+
+  .category-header {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--red);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .event-list { list-style: none; }
+
+  .event-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #f0ede7;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .event-item:last-child { border-bottom: none; }
+
+  .event-bullet {
+    color: var(--red);
+    flex-shrink: 0;
+    font-size: 10px;
+    position: relative;
+    top: -1px;
+  }
+
+  .event-date {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--ink-light);
+    flex-shrink: 0;
+    min-width: 185px;
+  }
+
+  .event-date.past { color: var(--ink-faint); }
+
+  .event-body { flex: 1; }
+
+  .event-location { color: var(--ink-light); }
+
+  .event-title a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 2px;
+    transition: text-decoration-color 0.15s, color 0.15s;
+  }
+
+  .event-title a:hover {
+    color: var(--red);
+    text-decoration-color: var(--red);
+  }
+
+  .event-title span { color: var(--ink); }
+
+  .event-age {
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+
+  .event-item.is-past { opacity: 0.55; }
+
+  .no-results {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink-faint);
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .loading {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink-faint);
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    .filters { flex-direction: column; }
+    .filter-group input[type="date"],
+    .filter-group input[type="text"],
+    #venue-input { width: 100%; }
+    .event-date { min-width: 120px; }
+    main { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <span class="site-name">Longfellow Whatever</span>
+    <h1>Whenever Wherever: <span>Events Calendar</span></h1>
+  </div>
+  <div class="filters">
+    <div class="filter-group">
+      <label>From</label>
+      <input type="date" id="date-from">
+    </div>
+    <div class="filter-group">
+      <label>To <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--ink-faint)">(optional)</span></label>
+      <input type="date" id="date-to">
+    </div>
+    <div class="filter-group">
+      <label>Keyword</label>
+      <input type="text" id="keyword-input" placeholder="Search events…">
+    </div>
+    <div class="filter-group">
+      <label>Venue</label>
+      <div class="venue-wrapper">
+        <input type="text" id="venue-input" placeholder="Type to filter…" autocomplete="off">
+        <div class="venue-dropdown" id="venue-dropdown"></div>
+      </div>
+      <div class="venue-tags" id="venue-tags"></div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn" id="clear-btn">Clear filters</button>
+    </div>
+    <label class="past-toggle">
+      <input type="checkbox" id="show-past"> Show past events
+    </label>
+  </div>
+</header>
+
+<main>
+  <div class="loading" id="loading">Loading events…</div>
+  <div id="results-summary" class="results-summary" style="display:none"></div>
+  <div id="calendar" style="display:none"></div>
+  <div class="no-results" id="no-results" style="display:none">No events match your filters.</div>
+</main>
+
+<footer>
+  <a href="https://www.longfellowwhatever.com" target="_blank">Longfellow Whatever</a> &nbsp;·&nbsp; A good-faith attempt to round up every event in Longfellow this month.
+</footer>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQDGgZsvJ-TEcrR5aKIdreB1PDAyrzmkztohWxtAFg72oi8BKaVDBSm2cZYTn998YQvz1jv85tmQwe9/pub?gid=246539680&single=true&output=csv';
+
+const CATEGORY_ORDER = [
+  'Civic and community',
+  'For kids',
+  'For seniors',
+  'Arts and crafts',
+  'Books, classes, and talks',
+  'Movement and games',
+  'Movies',
+  'Music',
+  'Trivia',
+  'Recurring protests',
+  'Etc.'
+];
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let allEvents = [];
+let expandedEvents = [];
+let selectedVenues = [];
+let allVenues = [];
+
+function parseCSV(text) {
+  const lines = text.split('\n');
+  const headers = parseCSVLine(lines[0]);
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = (vals[i] || '').trim());
+    return obj;
+  });
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// Parse a date string that could be "June 1", "June 1-3", "Week of June 15",
+// "June (all month)", a plain ISO date, or a human-readable date like "June 1, 2026"
+function parseFlexDate(str) {
+  if (!str) return null;
+  str = str.trim();
+
+  // ISO format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  // "Month Day, Year" e.g. "June 1, 2026"
+  const longDate = str.match(/^(\w+)\s+(\d+),?\s+(\d{4})$/);
+  if (longDate) {
+    const mi = MONTHS.findIndex(m => m.toLowerCase() === longDate[1].toLowerCase());
+    if (mi >= 0) return new Date(parseInt(longDate[3]), mi, parseInt(longDate[2]));
+  }
+
+  // "Month Day" e.g. "June 1" — assume current or next year
+  const shortDate = str.match(/^(\w+)\s+(\d+)(?:-\d+)?$/);
+  if (shortDate) {
+    const mi = MONTHS.findIndex(m => m.toLowerCase() === shortDate[1].toLowerCase());
+    if (mi >= 0) {
+      const now = new Date();
+      let year = now.getFullYear();
+      const candidate = new Date(year, mi, parseInt(shortDate[2]));
+      return candidate;
+    }
+  }
+
+  // "Week of Month Day"
+  const weekOf = str.match(/^Week of\s+(\w+)\s+(\d+)/i);
+  if (weekOf) {
+    const mi = MONTHS.findIndex(m => m.toLowerCase() === weekOf[1].toLowerCase());
+    if (mi >= 0) return new Date(new Date().getFullYear(), mi, parseInt(weekOf[2]));
+  }
+
+  return null;
+}
+
+function formatDisplayDate(dateObj, originalStr) {
+  if (!dateObj) return originalStr || '';
+
+  if (originalStr && /^June \(\s*all month\s*\)/i.test(originalStr)) return 'All of June';
+
+  // Date range display
+  if (originalStr) {
+    const rangeMatch = originalStr.match(/^(\w+)\s+(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const mi = MONTHS.findIndex(m => m.toLowerCase() === rangeMatch[1].toLowerCase());
+      if (mi >= 0) {
+        const d1 = new Date(dateObj.getFullYear(), mi, parseInt(rangeMatch[2]));
+        const d2 = new Date(dateObj.getFullYear(), mi, parseInt(rangeMatch[3]));
+        return `${DAYS[d1.getDay()]}–${DAYS[d2.getDay()]}, ${MONTHS[mi]} ${rangeMatch[2]}–${rangeMatch[3]}`;
+      }
+    }
+    const weekOf = originalStr.match(/^Week of\s+(\w+)\s+(\d+)/i);
+    if (weekOf) {
+      return `Week of ${DAYS[dateObj.getDay()]}, ${MONTHS[dateObj.getMonth()]} ${dateObj.getDate()}`;
+    }
+  }
+
+  return `${DAYS[dateObj.getDay()]}, ${MONTHS[dateObj.getMonth()]} ${dateObj.getDate()}`;
+}
+
+function isPast(dateObj) {
+  if (!dateObj) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const d = new Date(dateObj);
+  d.setHours(0,0,0,0);
+  return d < today;
+}
+
+function dateInRange(dateObj, fromVal, toVal) {
+  if (!dateObj) return true;
+  const d = new Date(dateObj);
+  d.setHours(0,0,0,0);
+  if (fromVal) {
+    const from = new Date(fromVal + 'T00:00:00');
+    if (d < from) return false;
+  }
+  if (toVal) {
+    const to = new Date(toVal + 'T00:00:00');
+    if (d > to) return false;
+  }
+  return true;
+}
+
+// Day of week index: 0=Sun,1=Mon,...6=Sat
+function dowIndex(recurrence) {
+  const map = {
+    'sundays':0,'sunday':0,'mondays':1,'monday':1,'tuesdays':2,'tuesday':2,
+    'wednesdays':3,'wednesday':3,'thursdays':4,'thursday':4,'fridays':5,'friday':5,
+    'saturdays':6,'saturday':6
+  };
+  return map[recurrence.toLowerCase().trim()] ?? -1;
+}
+
+// Expand recurring events into individual dated rows
+function expandEvents(raw) {
+  const result = [];
+  raw.forEach(ev => {
+    const recurrence = (ev.Recurrence || '').trim();
+    if (!recurrence) {
+      // One-time event
+      const dateObj = parseFlexDate(ev.Date);
+      result.push({ ...ev, _dateObj: dateObj, _displayDate: formatDisplayDate(dateObj, ev.Date) });
+      return;
+    }
+
+    const dow = dowIndex(recurrence);
+    if (dow < 0) {
+      // Unknown recurrence, just push as-is
+      result.push({ ...ev, _dateObj: null, _displayDate: ev.Date });
+      return;
+    }
+
+    const startObj = parseFlexDate(ev['Recurrence Start'] || ev.Date);
+    const endObj = parseFlexDate(ev['Recurrence End']);
+    if (!startObj || !endObj) {
+      result.push({ ...ev, _dateObj: null, _displayDate: ev.Date });
+      return;
+    }
+
+    // Walk from start to end, picking matching days of week
+    const cursor = new Date(startObj);
+    // Advance to first occurrence of the right DOW
+    while (cursor.getDay() !== dow) cursor.setDate(cursor.getDate() + 1);
+
+    while (cursor <= endObj) {
+      const dateObj = new Date(cursor);
+      result.push({
+        ...ev,
+        _dateObj: dateObj,
+        _displayDate: formatDisplayDate(dateObj, null)
+      });
+      cursor.setDate(cursor.getDate() + 7);
+    }
+  });
+  return result;
+}
+
+function render() {
+  const fromVal = document.getElementById('date-from').value;
+  const toVal = document.getElementById('date-to').value;
+  const keyword = document.getElementById('keyword-input').value.toLowerCase().trim();
+  const showPast = document.getElementById('show-past').checked;
+
+  const filtered = expandedEvents.filter(ev => {
+    if (!showPast && isPast(ev._dateObj)) return false;
+    if (!dateInRange(ev._dateObj, fromVal, toVal)) return false;
+    if (keyword) {
+      const haystack = [ev.Title, ev.Location, ev.Category, ev._displayDate].join(' ').toLowerCase();
+      if (!haystack.includes(keyword)) return false;
+    }
+    if (selectedVenues.length > 0) {
+      const loc = (ev.Location || '').toLowerCase();
+      if (!selectedVenues.some(v => loc === v.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const byCategory = {};
+  filtered.forEach(ev => {
+    const cat = ev.Category || 'Etc.';
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(ev);
+  });
+
+  const orderedCats = [
+    ...CATEGORY_ORDER.filter(c => byCategory[c]),
+    ...Object.keys(byCategory).filter(c => !CATEGORY_ORDER.includes(c))
+  ];
+
+  const cal = document.getElementById('calendar');
+  const summary = document.getElementById('results-summary');
+  const noResults = document.getElementById('no-results');
+
+  if (filtered.length === 0) {
+    cal.style.display = 'none';
+    noResults.style.display = 'block';
+    summary.style.display = 'none';
+    return;
+  }
+
+  noResults.style.display = 'none';
+  cal.style.display = 'block';
+  summary.style.display = 'block';
+
+  const isFiltering = fromVal || toVal || keyword || selectedVenues.length > 0 || showPast;
+  summary.textContent = isFiltering
+    ? `${filtered.length} event${filtered.length !== 1 ? 's' : ''} found`
+    : `${filtered.length} upcoming events`;
+
+  let html = '';
+  orderedCats.forEach(cat => {
+    const events = byCategory[cat];
+    if (!events || events.length === 0) return;
+
+    const sorted = events.slice().sort((a, b) => {
+      const da = a._dateObj, db = b._dateObj;
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da - db;
+    });
+
+    html += `<section class="category-section">`;
+    html += `<h2 class="category-header">${cat}</h2>`;
+    html += `<ul class="event-list">`;
+
+    sorted.forEach(ev => {
+      const past = isPast(ev._dateObj);
+      const locationStr = ev.Location ? `${ev.Location}: ` : '';
+      const titleHtml = ev.URL
+        ? `<a href="${ev.URL}" target="_blank" rel="noopener">${ev.Title}</a>`
+        : `<span>${ev.Title}</span>`;
+      const ageHtml = ev['Age Range']
+        ? ` <span class="event-age">(${ev['Age Range']})</span>`
+        : '';
+
+      html += `<li class="event-item${past ? ' is-past' : ''}">`;
+      html += `<span class="event-bullet" aria-hidden="true">&#9679;</span>`;
+      html += `<span class="event-date${past ? ' past' : ''}">${ev._displayDate}</span>`;
+      html += `<span class="event-body"><span class="event-location">${locationStr}</span><span class="event-title">${titleHtml}${ageHtml}</span></span>`;
+      html += `</li>`;
+    });
+
+    html += `</ul></section>`;
+  });
+
+  cal.innerHTML = html;
+}
+
+function buildVenueList() {
+  const venueSet = new Set();
+  expandedEvents.forEach(ev => { if (ev.Location) venueSet.add(ev.Location.trim()); });
+  allVenues = [...venueSet].sort();
+}
+
+function updateVenueDropdown(query) {
+  const dd = document.getElementById('venue-dropdown');
+  const q = query.toLowerCase();
+  if (!q) { dd.classList.remove('open'); return; }
+  const matches = allVenues.filter(v =>
+    v.toLowerCase().includes(q) && !selectedVenues.includes(v)
+  );
+  if (matches.length === 0) { dd.classList.remove('open'); return; }
+  dd.innerHTML = matches.slice(0, 10).map(v =>
+    `<div class="venue-option" data-venue="${v}">${v}</div>`
+  ).join('');
+  dd.classList.add('open');
+}
+
+function addVenue(venue) {
+  if (!selectedVenues.includes(venue)) {
+    selectedVenues.push(venue);
+    renderVenueTags();
+    render();
+  }
+  document.getElementById('venue-input').value = '';
+  document.getElementById('venue-dropdown').classList.remove('open');
+}
+
+function removeVenue(venue) {
+  selectedVenues = selectedVenues.filter(v => v !== venue);
+  renderVenueTags();
+  render();
+}
+
+function renderVenueTags() {
+  const container = document.getElementById('venue-tags');
+  container.innerHTML = selectedVenues.map(v =>
+    `<span class="venue-tag">${v}<button onclick="removeVenue('${v.replace(/'/g, "\\'")}')" aria-label="Remove ${v}">×</button></span>`
+  ).join('');
+}
+
+async function init() {
+  try {
+    const resp = await fetch(CSV_URL);
+    const text = await resp.text();
+    allEvents = parseCSV(text).filter(ev => ev.Title);
+    expandedEvents = expandEvents(allEvents);
+    buildVenueList();
+
+    document.getElementById('loading').style.display = 'none';
+    render();
+
+    document.getElementById('date-from').addEventListener('change', () => {
+      const from = document.getElementById('date-from').value;
+      const to = document.getElementById('date-to').value;
+      if (to && to < from) document.getElementById('date-to').value = from;
+      render();
+    });
+    document.getElementById('date-to').addEventListener('change', render);
+    document.getElementById('keyword-input').addEventListener('input', render);
+    document.getElementById('show-past').addEventListener('change', render);
+
+    document.getElementById('venue-input').addEventListener('input', e => {
+      updateVenueDropdown(e.target.value);
+    });
+    document.getElementById('venue-input').addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.getElementById('venue-dropdown').classList.remove('open');
+    });
+    document.getElementById('venue-dropdown').addEventListener('click', e => {
+      const opt = e.target.closest('.venue-option');
+      if (opt) addVenue(opt.dataset.venue);
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.venue-wrapper')) {
+        document.getElementById('venue-dropdown').classList.remove('open');
+      }
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      document.getElementById('date-from').value = '';
+      document.getElementById('date-to').value = '';
+      document.getElementById('keyword-input').value = '';
+      document.getElementById('show-past').checked = false;
+      selectedVenues = [];
+      renderVenueTags();
+      document.getElementById('venue-input').value = '';
+      render();
+    });
+
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Could not load events. Please try again later.';
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
