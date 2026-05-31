@@ -6,12 +6,12 @@
 <title>Whenever Wherever: Events Calendar</title>
 <style>
   :root {
-    --cream: #FAF8F4;
+    --cream: #fdf9d2;
     --ink: #1a1a18;
     --ink-light: #5a5a55;
     --ink-faint: #9a9a93;
-    --red: #c94a3a;
-    --red-light: #f5ece9;
+    --teal: #008080;
+    --teal-light: #e6f3f3;
     --border: #e2dfd8;
     --white: #ffffff;
     --font-body: 'Georgia', serif;
@@ -63,7 +63,7 @@
     color: var(--ink);
   }
 
-  h1 span { color: var(--red); }
+  h1 span { color: var(--teal); }
 
   .filters {
     display: flex;
@@ -102,7 +102,7 @@
 
   .filter-group input[type="date"]:focus,
   .filter-group input[type="text"]:focus {
-    border-color: var(--red);
+    border-color: var(--teal);
   }
 
   .filter-group input[type="date"] { width: 150px; }
@@ -110,10 +110,7 @@
 
   .venue-wrapper { position: relative; }
 
-  #venue-input {
-    width: 200px;
-    padding-right: 1.5rem;
-  }
+  #venue-input { width: 200px; }
 
   .venue-tags {
     display: flex;
@@ -126,9 +123,9 @@
   .venue-tag {
     font-family: var(--font-ui);
     font-size: 11px;
-    background: var(--red-light);
-    color: var(--red);
-    border: 1px solid #e8c5be;
+    background: var(--teal-light);
+    color: var(--teal);
+    border: 1px solid #b3d4d4;
     border-radius: 3px;
     padding: 2px 6px 2px 8px;
     display: flex;
@@ -139,7 +136,7 @@
   .venue-tag button {
     background: none;
     border: none;
-    color: var(--red);
+    color: var(--teal);
     cursor: pointer;
     font-size: 13px;
     line-height: 1;
@@ -212,7 +209,7 @@
     padding-bottom: 0.4rem;
   }
 
-  .past-toggle input { cursor: pointer; accent-color: var(--red); }
+  .past-toggle input { cursor: pointer; accent-color: var(--teal); }
 
   main {
     max-width: 760px;
@@ -224,8 +221,30 @@
     font-family: var(--font-ui);
     font-size: 12px;
     color: var(--ink-faint);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     letter-spacing: 0.04em;
+  }
+
+  .category-nav {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 1.75rem;
+    color: var(--ink-faint);
+  }
+
+  .category-nav a {
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  .category-nav a:hover {
+    text-decoration: underline;
+  }
+
+  .category-nav .sep {
+    color: var(--ink-faint);
+    margin: 0 0.35rem;
   }
 
   .category-section { margin-bottom: 2.5rem; }
@@ -236,7 +255,7 @@
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--red);
+    color: var(--teal);
     border-bottom: 1px solid var(--border);
     padding-bottom: 0.4rem;
     margin-bottom: 0.75rem;
@@ -247,38 +266,35 @@
   .event-item {
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid #f0ede7;
-    font-size: 15px;
+    gap: 0.4rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #edeadb;
+    font-size: 16px;
     line-height: 1.5;
   }
 
   .event-item:last-child { border-bottom: none; }
 
   .event-bullet {
-    color: var(--red);
+    color: var(--teal);
     flex-shrink: 0;
     font-size: 10px;
     position: relative;
     top: -1px;
   }
 
-  .event-date {
-    font-family: var(--font-ui);
-    font-size: 13px;
-    color: var(--ink-light);
-    flex-shrink: 0;
-    min-width: 185px;
+  .event-line {
+    flex: 1;
+    font-size: 16px;
+    font-family: var(--font-body);
+    color: var(--ink);
   }
 
-  .event-date.past { color: var(--ink-faint); }
+  .event-line .event-meta {
+    color: var(--ink);
+  }
 
-  .event-body { flex: 1; }
-
-  .event-location { color: var(--ink-light); }
-
-  .event-title a {
+  .event-line a {
     color: var(--ink);
     text-decoration: underline;
     text-decoration-color: var(--border);
@@ -286,20 +302,17 @@
     transition: text-decoration-color 0.15s, color 0.15s;
   }
 
-  .event-title a:hover {
-    color: var(--red);
-    text-decoration-color: var(--red);
+  .event-line a:hover {
+    color: var(--teal);
+    text-decoration-color: var(--teal);
   }
-
-  .event-title span { color: var(--ink); }
 
   .event-age {
     font-style: italic;
     color: var(--ink-faint);
-    font-size: 14px;
   }
 
-  .event-item.is-past { opacity: 0.55; }
+  .event-item.is-past { opacity: 0.5; }
 
   .no-results {
     font-family: var(--font-ui);
@@ -317,27 +330,12 @@
     padding: 3rem 0;
   }
 
-  footer {
-    text-align: center;
-    padding: 2rem;
-    font-family: var(--font-ui);
-    font-size: 11px;
-    color: var(--ink-faint);
-    letter-spacing: 0.05em;
-    border-top: 1px solid var(--border);
-    margin-top: 2rem;
-  }
-
-  footer a { color: var(--red); text-decoration: none; }
-  footer a:hover { text-decoration: underline; }
-
   @media (max-width: 600px) {
     header { padding: 1rem; }
     .filters { flex-direction: column; }
     .filter-group input[type="date"],
     .filter-group input[type="text"],
     #venue-input { width: 100%; }
-    .event-date { min-width: 120px; }
     main { padding: 1rem; }
   }
 </style>
@@ -382,37 +380,25 @@
 <main>
   <div class="loading" id="loading">Loading events…</div>
   <div id="results-summary" class="results-summary" style="display:none"></div>
+  <div class="category-nav" id="category-nav" style="display:none"></div>
   <div id="calendar" style="display:none"></div>
   <div class="no-results" id="no-results" style="display:none">No events match your filters.</div>
 </main>
-
-<footer>
-  <a href="https://www.longfellowwhatever.com" target="_blank">Longfellow Whatever</a> &nbsp;·&nbsp; A good-faith attempt to round up every event in Longfellow this month.
-</footer>
 
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQDGgZsvJ-TEcrR5aKIdreB1PDAyrzmkztohWxtAFg72oi8BKaVDBSm2cZYTn998YQvz1jv85tmQwe9/pub?gid=246539680&single=true&output=csv';
 
 const CATEGORY_ORDER = [
-  'Civic and community',
-  'For kids',
-  'For seniors',
-  'Arts and crafts',
-  'Books, classes, and talks',
-  'Movement and games',
-  'Movies',
-  'Music',
-  'Trivia',
-  'Recurring protests',
-  'Etc.'
+  'Civic and community','For kids','For seniors','Arts and crafts',
+  'Books, classes, and talks','Movement and games','Movies','Music',
+  'Trivia','Recurring protests','Etc.'
 ];
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS = ['January','February','March','April','May','June','July',
+                'August','September','October','November','December'];
 
-let allEvents = [];
-let expandedEvents = [];
+let rawEvents = [];
 let selectedVenues = [];
 let allVenues = [];
 
@@ -438,156 +424,82 @@ function parseCSVLine(line) {
       else inQuotes = !inQuotes;
     } else if (ch === ',' && !inQuotes) {
       result.push(current); current = '';
-    } else {
-      current += ch;
-    }
+    } else { current += ch; }
   }
   result.push(current);
   return result;
 }
 
-// Parse a date string that could be "June 1", "June 1-3", "Week of June 15",
-// "June (all month)", a plain ISO date, or a human-readable date like "June 1, 2026"
 function parseFlexDate(str) {
   if (!str) return null;
   str = str.trim();
-
-  // ISO format
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     const [y,m,d] = str.split('-').map(Number);
     return new Date(y, m-1, d);
   }
-
-  // "Month Day, Year" e.g. "June 1, 2026"
   const longDate = str.match(/^(\w+)\s+(\d+),?\s+(\d{4})$/);
   if (longDate) {
     const mi = MONTHS.findIndex(m => m.toLowerCase() === longDate[1].toLowerCase());
     if (mi >= 0) return new Date(parseInt(longDate[3]), mi, parseInt(longDate[2]));
   }
-
-  // "Month Day" e.g. "June 1" — assume current or next year
   const shortDate = str.match(/^(\w+)\s+(\d+)(?:-\d+)?$/);
   if (shortDate) {
     const mi = MONTHS.findIndex(m => m.toLowerCase() === shortDate[1].toLowerCase());
-    if (mi >= 0) {
-      const now = new Date();
-      let year = now.getFullYear();
-      const candidate = new Date(year, mi, parseInt(shortDate[2]));
-      return candidate;
-    }
+    if (mi >= 0) return new Date(new Date().getFullYear(), mi, parseInt(shortDate[2]));
   }
-
-  // "Week of Month Day"
   const weekOf = str.match(/^Week of\s+(\w+)\s+(\d+)/i);
   if (weekOf) {
     const mi = MONTHS.findIndex(m => m.toLowerCase() === weekOf[1].toLowerCase());
     if (mi >= 0) return new Date(new Date().getFullYear(), mi, parseInt(weekOf[2]));
   }
-
   return null;
 }
 
-function formatDisplayDate(dateObj, originalStr) {
-  if (!dateObj) return originalStr || '';
+function dowIndex(recurrence) {
+  const map = {
+    'sunday':0,'sundays':0,'monday':1,'mondays':1,'tuesday':2,'tuesdays':2,
+    'wednesday':3,'wednesdays':3,'thursday':4,'thursdays':4,'friday':5,'fridays':5,
+    'saturday':6,'saturdays':6
+  };
+  return map[(recurrence||'').toLowerCase().trim()] ?? -1;
+}
 
-  if (originalStr && /^June \(\s*all month\s*\)/i.test(originalStr)) return 'All of June';
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
-  // Date range display
-  if (originalStr) {
-    const rangeMatch = originalStr.match(/^(\w+)\s+(\d+)-(\d+)$/);
-    if (rangeMatch) {
-      const mi = MONTHS.findIndex(m => m.toLowerCase() === rangeMatch[1].toLowerCase());
-      if (mi >= 0) {
-        const d1 = new Date(dateObj.getFullYear(), mi, parseInt(rangeMatch[2]));
-        const d2 = new Date(dateObj.getFullYear(), mi, parseInt(rangeMatch[3]));
-        return `${DAYS[d1.getDay()]}–${DAYS[d2.getDay()]}, ${MONTHS[mi]} ${rangeMatch[2]}–${rangeMatch[3]}`;
-      }
-    }
-    const weekOf = originalStr.match(/^Week of\s+(\w+)\s+(\d+)/i);
-    if (weekOf) {
-      return `Week of ${DAYS[dateObj.getDay()]}, ${MONTHS[dateObj.getMonth()]} ${dateObj.getDate()}`;
-    }
-  }
-
+function formatDate(dateObj) {
   return `${DAYS[dateObj.getDay()]}, ${MONTHS[dateObj.getMonth()]} ${dateObj.getDate()}`;
 }
 
 function isPast(dateObj) {
   if (!dateObj) return false;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const d = new Date(dateObj);
-  d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateObj); d.setHours(0,0,0,0);
   return d < today;
 }
 
-function dateInRange(dateObj, fromVal, toVal) {
-  if (!dateObj) return true;
-  const d = new Date(dateObj);
-  d.setHours(0,0,0,0);
+function isDateFiltering() {
+  return !!(document.getElementById('date-from').value || document.getElementById('date-to').value);
+}
+
+function dateMatchesFilter(dateObj, fromVal, toVal) {
+  if (!dateObj) return false;
+  const d = new Date(dateObj); d.setHours(0,0,0,0);
   if (fromVal) {
     const from = new Date(fromVal + 'T00:00:00');
-    if (d < from) return false;
-  }
-  if (toVal) {
-    const to = new Date(toVal + 'T00:00:00');
-    if (d > to) return false;
+    if (toVal) {
+      const to = new Date(toVal + 'T00:00:00');
+      return d >= from && d <= to;
+    }
+    // No "to" — exact date match
+    return d.getTime() === from.getTime();
   }
   return true;
 }
 
-// Day of week index: 0=Sun,1=Mon,...6=Sat
-function dowIndex(recurrence) {
-  const map = {
-    'sundays':0,'sunday':0,'mondays':1,'monday':1,'tuesdays':2,'tuesday':2,
-    'wednesdays':3,'wednesday':3,'thursdays':4,'thursday':4,'fridays':5,'friday':5,
-    'saturdays':6,'saturday':6
-  };
-  return map[recurrence.toLowerCase().trim()] ?? -1;
-}
-
-// Expand recurring events into individual dated rows
-function expandEvents(raw) {
-  const result = [];
-  raw.forEach(ev => {
-    const recurrence = (ev.Recurrence || '').trim();
-    if (!recurrence) {
-      // One-time event
-      const dateObj = parseFlexDate(ev.Date);
-      result.push({ ...ev, _dateObj: dateObj, _displayDate: formatDisplayDate(dateObj, ev.Date) });
-      return;
-    }
-
-    const dow = dowIndex(recurrence);
-    if (dow < 0) {
-      // Unknown recurrence, just push as-is
-      result.push({ ...ev, _dateObj: null, _displayDate: ev.Date });
-      return;
-    }
-
-    const startObj = parseFlexDate(ev['Recurrence Start'] || ev.Date);
-    const endObj = parseFlexDate(ev['Recurrence End']);
-    if (!startObj || !endObj) {
-      result.push({ ...ev, _dateObj: null, _displayDate: ev.Date });
-      return;
-    }
-
-    // Walk from start to end, picking matching days of week
-    const cursor = new Date(startObj);
-    // Advance to first occurrence of the right DOW
-    while (cursor.getDay() !== dow) cursor.setDate(cursor.getDate() + 1);
-
-    while (cursor <= endObj) {
-      const dateObj = new Date(cursor);
-      result.push({
-        ...ev,
-        _dateObj: dateObj,
-        _displayDate: formatDisplayDate(dateObj, null)
-      });
-      cursor.setDate(cursor.getDate() + 7);
-    }
-  });
-  return result;
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function render() {
@@ -595,84 +507,166 @@ function render() {
   const toVal = document.getElementById('date-to').value;
   const keyword = document.getElementById('keyword-input').value.toLowerCase().trim();
   const showPast = document.getElementById('show-past').checked;
-
-  const filtered = expandedEvents.filter(ev => {
-    if (!showPast && isPast(ev._dateObj)) return false;
-    if (!dateInRange(ev._dateObj, fromVal, toVal)) return false;
-    if (keyword) {
-      const haystack = [ev.Title, ev.Location, ev.Category, ev._displayDate].join(' ').toLowerCase();
-      if (!haystack.includes(keyword)) return false;
-    }
-    if (selectedVenues.length > 0) {
-      const loc = (ev.Location || '').toLowerCase();
-      if (!selectedVenues.some(v => loc === v.toLowerCase())) return false;
-    }
-    return true;
-  });
+  const dateFiltering = isDateFiltering();
 
   const byCategory = {};
-  filtered.forEach(ev => {
+
+  CATEGORY_ORDER.forEach(cat => { byCategory[cat] = []; });
+
+  rawEvents.forEach(ev => {
+    const recurrence = (ev.Recurrence || '').trim();
     const cat = ev.Category || 'Etc.';
     if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push(ev);
+
+    if (recurrence && !dateFiltering) {
+      // Show collapsed — one entry per unique title+location+recurrence
+      const key = `${recurrence}|${ev.Location}|${ev.Title}`;
+      if (!byCategory[cat]._recurringKeys) byCategory[cat]._recurringKeys = new Set();
+      if (byCategory[cat]._recurringKeys.has(key)) return;
+
+      // Apply keyword/venue filters
+      if (keyword) {
+        const haystack = [ev.Title, ev.Location, ev.Category, recurrence].join(' ').toLowerCase();
+        if (!haystack.includes(keyword)) return;
+      }
+      if (selectedVenues.length > 0) {
+        const loc = (ev.Location || '').toLowerCase();
+        if (!selectedVenues.some(v => loc === v.toLowerCase())) return;
+      }
+
+      byCategory[cat]._recurringKeys.add(key);
+      byCategory[cat].push({ ...ev, _collapsed: true, _dateObj: null, _sortKey: -1 });
+
+    } else if (recurrence && dateFiltering) {
+      // Expand recurring into dates and filter
+      const dow = dowIndex(recurrence);
+      if (dow < 0) return;
+      const startObj = parseFlexDate(ev['Recurrence Start'] || ev.Date);
+      const endObj = parseFlexDate(ev['Recurrence End']);
+      if (!startObj || !endObj) return;
+
+      const cursor = new Date(startObj);
+      while (cursor.getDay() !== dow) cursor.setDate(cursor.getDate() + 1);
+
+      while (cursor <= endObj) {
+        const dateObj = new Date(cursor);
+        if (!showPast && isPast(dateObj)) { cursor.setDate(cursor.getDate() + 7); continue; }
+        if (!dateMatchesFilter(dateObj, fromVal, toVal)) { cursor.setDate(cursor.getDate() + 7); continue; }
+
+        if (keyword) {
+          const haystack = [ev.Title, ev.Location, ev.Category, formatDate(dateObj)].join(' ').toLowerCase();
+          if (!haystack.includes(keyword)) { cursor.setDate(cursor.getDate() + 7); continue; }
+        }
+        if (selectedVenues.length > 0) {
+          const loc = (ev.Location || '').toLowerCase();
+          if (!selectedVenues.some(v => loc === v.toLowerCase())) { cursor.setDate(cursor.getDate() + 7); continue; }
+        }
+
+        byCategory[cat].push({ ...ev, _collapsed: false, _dateObj: new Date(dateObj), _sortKey: dateObj.getTime() });
+        cursor.setDate(cursor.getDate() + 7);
+      }
+
+    } else {
+      // One-time event
+      const dateObj = parseFlexDate(ev.Date);
+      if (!showPast && isPast(dateObj)) return;
+      if (dateFiltering && !dateMatchesFilter(dateObj, fromVal, toVal)) return;
+      if (keyword) {
+        const haystack = [ev.Title, ev.Location, ev.Category, ev.Date].join(' ').toLowerCase();
+        if (!haystack.includes(keyword)) return;
+      }
+      if (selectedVenues.length > 0) {
+        const loc = (ev.Location || '').toLowerCase();
+        if (!selectedVenues.some(v => loc === v.toLowerCase())) return;
+      }
+      byCategory[cat].push({ ...ev, _collapsed: false, _dateObj: dateObj, _sortKey: dateObj ? dateObj.getTime() : Infinity });
+    }
   });
 
-  const orderedCats = [
-    ...CATEGORY_ORDER.filter(c => byCategory[c]),
-    ...Object.keys(byCategory).filter(c => !CATEGORY_ORDER.includes(c))
-  ];
+  // Clean up helper sets
+  Object.values(byCategory).forEach(arr => { delete arr._recurringKeys; });
+
+  const activeCats = CATEGORY_ORDER.filter(c => byCategory[c] && byCategory[c].length > 0);
+  const totalEvents = activeCats.reduce((sum, c) => sum + byCategory[c].length, 0);
 
   const cal = document.getElementById('calendar');
   const summary = document.getElementById('results-summary');
   const noResults = document.getElementById('no-results');
+  const catNav = document.getElementById('category-nav');
 
-  if (filtered.length === 0) {
+  if (totalEvents === 0) {
     cal.style.display = 'none';
     noResults.style.display = 'block';
     summary.style.display = 'none';
+    catNav.style.display = 'none';
     return;
   }
 
   noResults.style.display = 'none';
   cal.style.display = 'block';
   summary.style.display = 'block';
+  catNav.style.display = 'block';
 
   const isFiltering = fromVal || toVal || keyword || selectedVenues.length > 0 || showPast;
   summary.textContent = isFiltering
-    ? `${filtered.length} event${filtered.length !== 1 ? 's' : ''} found`
-    : `${filtered.length} upcoming events`;
+    ? `${totalEvents} event${totalEvents !== 1 ? 's' : ''} found`
+    : `${totalEvents} upcoming events`;
 
+  // Category nav
+  catNav.innerHTML = activeCats.map((cat, i) =>
+    `${i > 0 ? '<span class="sep">•</span>' : ''}<a href="#cat-${slugify(cat)}">${cat}</a>`
+  ).join('');
+
+  // Events
   let html = '';
-  orderedCats.forEach(cat => {
+  activeCats.forEach(cat => {
     const events = byCategory[cat];
-    if (!events || events.length === 0) return;
 
-    const sorted = events.slice().sort((a, b) => {
-      const da = a._dateObj, db = b._dateObj;
-      if (!da && !db) return 0;
-      if (!da) return 1;
-      if (!db) return -1;
-      return da - db;
+    // Sort: collapsed recurrings first (by recurrence label), then dated events chronologically
+    events.sort((a, b) => {
+      if (a._collapsed && b._collapsed) return 0;
+      if (a._collapsed) return 1;
+      if (b._collapsed) return -1;
+      return a._sortKey - b._sortKey;
     });
 
-    html += `<section class="category-section">`;
+    html += `<section class="category-section" id="cat-${slugify(cat)}">`;
     html += `<h2 class="category-header">${cat}</h2>`;
     html += `<ul class="event-list">`;
 
-    sorted.forEach(ev => {
-      const past = isPast(ev._dateObj);
-      const locationStr = ev.Location ? `${ev.Location}: ` : '';
+    events.forEach(ev => {
+      const past = !ev._collapsed && isPast(ev._dateObj);
+
+      let dateStr;
+      if (ev._collapsed) {
+        dateStr = capitalize(ev.Recurrence);
+      } else if (ev.Date && /^Week of/i.test(ev.Date)) {
+        dateStr = `Week of ${formatDate(ev._dateObj)}`;
+      } else if (ev.Date && /all month/i.test(ev.Date)) {
+        dateStr = 'All month';
+      } else if (ev.Date && /^(\w+)\s+(\d+)-(\d+)$/.test(ev.Date)) {
+        const m = ev.Date.match(/^(\w+)\s+(\d+)-(\d+)$/);
+        const mi = MONTHS.findIndex(mo => mo.toLowerCase() === m[1].toLowerCase());
+        if (mi >= 0) {
+          const d1 = new Date(new Date().getFullYear(), mi, parseInt(m[2]));
+          const d2 = new Date(new Date().getFullYear(), mi, parseInt(m[3]));
+          dateStr = `${DAYS[d1.getDay()]}–${DAYS[d2.getDay()]}, ${MONTHS[mi]} ${m[2]}–${m[3]}`;
+        } else {
+          dateStr = ev.Date;
+        }
+      } else {
+        dateStr = ev._dateObj ? formatDate(ev._dateObj) : (ev.Date || '');
+      }
+
+      const locationPart = ev.Location ? ` @ ${ev.Location}` : '';
       const titleHtml = ev.URL
         ? `<a href="${ev.URL}" target="_blank" rel="noopener">${ev.Title}</a>`
-        : `<span>${ev.Title}</span>`;
-      const ageHtml = ev['Age Range']
-        ? ` <span class="event-age">(${ev['Age Range']})</span>`
-        : '';
+        : ev.Title;
+      const ageHtml = ev['Age Range'] ? ` <span class="event-age">(${ev['Age Range']})</span>` : '';
 
       html += `<li class="event-item${past ? ' is-past' : ''}">`;
       html += `<span class="event-bullet" aria-hidden="true">&#9679;</span>`;
-      html += `<span class="event-date${past ? ' past' : ''}">${ev._displayDate}</span>`;
-      html += `<span class="event-body"><span class="event-location">${locationStr}</span><span class="event-title">${titleHtml}${ageHtml}</span></span>`;
+      html += `<span class="event-line">${dateStr}${locationPart}: ${titleHtml}${ageHtml}</span>`;
       html += `</li>`;
     });
 
@@ -684,7 +678,7 @@ function render() {
 
 function buildVenueList() {
   const venueSet = new Set();
-  expandedEvents.forEach(ev => { if (ev.Location) venueSet.add(ev.Location.trim()); });
+  rawEvents.forEach(ev => { if (ev.Location) venueSet.add(ev.Location.trim()); });
   allVenues = [...venueSet].sort();
 }
 
@@ -692,9 +686,7 @@ function updateVenueDropdown(query) {
   const dd = document.getElementById('venue-dropdown');
   const q = query.toLowerCase();
   if (!q) { dd.classList.remove('open'); return; }
-  const matches = allVenues.filter(v =>
-    v.toLowerCase().includes(q) && !selectedVenues.includes(v)
-  );
+  const matches = allVenues.filter(v => v.toLowerCase().includes(q) && !selectedVenues.includes(v));
   if (matches.length === 0) { dd.classList.remove('open'); return; }
   dd.innerHTML = matches.slice(0, 10).map(v =>
     `<div class="venue-option" data-venue="${v}">${v}</div>`
@@ -703,25 +695,19 @@ function updateVenueDropdown(query) {
 }
 
 function addVenue(venue) {
-  if (!selectedVenues.includes(venue)) {
-    selectedVenues.push(venue);
-    renderVenueTags();
-    render();
-  }
+  if (!selectedVenues.includes(venue)) { selectedVenues.push(venue); renderVenueTags(); render(); }
   document.getElementById('venue-input').value = '';
   document.getElementById('venue-dropdown').classList.remove('open');
 }
 
 function removeVenue(venue) {
   selectedVenues = selectedVenues.filter(v => v !== venue);
-  renderVenueTags();
-  render();
+  renderVenueTags(); render();
 }
 
 function renderVenueTags() {
-  const container = document.getElementById('venue-tags');
-  container.innerHTML = selectedVenues.map(v =>
-    `<span class="venue-tag">${v}<button onclick="removeVenue('${v.replace(/'/g, "\\'")}')" aria-label="Remove ${v}">×</button></span>`
+  document.getElementById('venue-tags').innerHTML = selectedVenues.map(v =>
+    `<span class="venue-tag">${v}<button onclick="removeVenue('${v.replace(/'/g,"\\'")}')" aria-label="Remove ${v}">×</button></span>`
   ).join('');
 }
 
@@ -729,10 +715,8 @@ async function init() {
   try {
     const resp = await fetch(CSV_URL);
     const text = await resp.text();
-    allEvents = parseCSV(text).filter(ev => ev.Title);
-    expandedEvents = expandEvents(allEvents);
+    rawEvents = parseCSV(text).filter(ev => ev.Title);
     buildVenueList();
-
     document.getElementById('loading').style.display = 'none';
     render();
 
@@ -746,9 +730,7 @@ async function init() {
     document.getElementById('keyword-input').addEventListener('input', render);
     document.getElementById('show-past').addEventListener('change', render);
 
-    document.getElementById('venue-input').addEventListener('input', e => {
-      updateVenueDropdown(e.target.value);
-    });
+    document.getElementById('venue-input').addEventListener('input', e => updateVenueDropdown(e.target.value));
     document.getElementById('venue-input').addEventListener('keydown', e => {
       if (e.key === 'Escape') document.getElementById('venue-dropdown').classList.remove('open');
     });
@@ -757,9 +739,7 @@ async function init() {
       if (opt) addVenue(opt.dataset.venue);
     });
     document.addEventListener('click', e => {
-      if (!e.target.closest('.venue-wrapper')) {
-        document.getElementById('venue-dropdown').classList.remove('open');
-      }
+      if (!e.target.closest('.venue-wrapper')) document.getElementById('venue-dropdown').classList.remove('open');
     });
 
     document.getElementById('clear-btn').addEventListener('click', () => {
@@ -767,8 +747,7 @@ async function init() {
       document.getElementById('date-to').value = '';
       document.getElementById('keyword-input').value = '';
       document.getElementById('show-past').checked = false;
-      selectedVenues = [];
-      renderVenueTags();
+      selectedVenues = []; renderVenueTags();
       document.getElementById('venue-input').value = '';
       render();
     });
