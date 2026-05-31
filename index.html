@@ -234,7 +234,7 @@
   .category-nav a:hover { text-decoration: underline; }
   .category-nav .sep { color: var(--ink-faint); margin: 0 0.35rem; }
 
-  .category-section { margin-bottom: 2.5rem; }
+  .category-section { margin-bottom: 2.5rem; scroll-margin-top: 160px; }
 
   .category-header {
     font-family: var(--font-ui);
@@ -660,6 +660,7 @@ function render() {
   });
 
   cal.innerHTML = html;
+  updateScrollMargin();
 }
 
 function buildVenueList() {
@@ -697,6 +698,13 @@ function renderVenueTags() {
   ).join('');
 }
 
+function updateScrollMargin() {
+  const headerHeight = document.querySelector('header').offsetHeight;
+  document.querySelectorAll('.category-section').forEach(el => {
+    el.style.scrollMarginTop = (headerHeight + 16) + 'px';
+  });
+}
+
 async function init() {
   try {
     const resp = await fetch(CSV_URL);
@@ -705,6 +713,8 @@ async function init() {
     buildVenueList();
     document.getElementById('loading').style.display = 'none';
     render();
+    updateScrollMargin();
+    window.addEventListener('resize', updateScrollMargin);
 
     document.getElementById('date-from').addEventListener('change', () => {
       const from = document.getElementById('date-from').value;
