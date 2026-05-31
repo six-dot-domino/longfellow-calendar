@@ -257,7 +257,7 @@
   }
 
   .event-table td {
-    padding: 0.3rem 0.5rem 0.3rem 0;
+    padding: 0.3rem 0.75rem 0.3rem 0;
     vertical-align: top;
     border-bottom: 1px solid #edeadb;
     line-height: 1.5;
@@ -266,16 +266,9 @@
 
   .event-table tr:last-child td { border-bottom: none; }
 
-  .col-day {
-    width: 48px;
-    color: var(--ink-light);
-    white-space: nowrap;
-  }
-
   .col-date {
-    width: 90px;
+    width: 140px;
     color: var(--ink-light);
-    white-space: nowrap;
   }
 
   .col-venue {
@@ -329,9 +322,8 @@
     .filter-group input[type="text"],
     #venue-input { width: 100%; }
     main { padding: 1rem; }
-    .col-day { width: 36px; }
-    .col-date { width: 70px; }
-    .col-venue { width: 120px; }
+    .col-date { width: 110px; }
+    .col-venue { width: 130px; }
   }
 </style>
 </head>
@@ -393,6 +385,7 @@ const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','
 const DAYS_ABBR = ['Sun.','Mon.','Tue.','Wed.','Thu.','Fri.','Sat.'];
 const MONTHS = ['January','February','March','April','May','June','July',
                 'August','September','October','November','December'];
+const MONTHS_ABBR = ['Jan.','Feb.','Mar.','Apr.','May','Jun.','Jul.','Aug.','Sep.','Oct.','Nov.','Dec.'];
 
 let rawEvents = [];
 let selectedVenues = [];
@@ -489,40 +482,42 @@ function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function getDayCols(ev, dateObj) {
+function formatDateCol(ev, dateObj) {
   const recurrence = (ev.Recurrence || '').trim();
+
+  // Collapsed recurring — write out full plural day name
   if (ev._collapsed && recurrence) {
     const dow = dowIndex(recurrence);
-    if (dow >= 0) return { day: DAYS_ABBR[dow] + 's', date: '' };
-    return { day: recurrence, date: '' };
+    if (dow >= 0) return DAYS_FULL[dow] + 's';
+    return recurrence;
   }
+
   if (!dateObj) {
-    if (ev.Date && /all month/i.test(ev.Date)) return { day: '', date: 'All month' };
+    if (ev.Date && /all month/i.test(ev.Date)) return 'All month';
     if (ev.Date && /^Week of/i.test(ev.Date)) {
       const m = ev.Date.match(/^Week of\s+(\w+)\s+(\d+)/i);
       if (m) {
         const mi = MONTHS.findIndex(mo => mo.toLowerCase() === m[1].toLowerCase());
         const d = new Date(new Date().getFullYear(), mi >= 0 ? mi : 0, parseInt(m[2]));
-        return { day: 'Wk of', date: `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}` };
+        return `Wk. of ${DAYS_ABBR[d.getDay()]} ${MONTHS_ABBR[d.getMonth()]} ${d.getDate()}`;
       }
     }
-    return { day: '', date: ev.Date || '' };
+    return ev.Date || '';
   }
+
+  // Date range e.g. "June 12-14"
   if (ev.Date && /^(\w+)\s+(\d+)-(\d+)$/.test(ev.Date)) {
     const m = ev.Date.match(/^(\w+)\s+(\d+)-(\d+)$/);
     const mi = MONTHS.findIndex(mo => mo.toLowerCase() === m[1].toLowerCase());
     if (mi >= 0) {
+      const d1 = new Date(new Date().getFullYear(), mi, parseInt(m[2]));
       const d2 = new Date(new Date().getFullYear(), mi, parseInt(m[3]));
-      return {
-        day: `${DAYS_ABBR[dateObj.getDay()]}–${DAYS_ABBR[d2.getDay()]}`,
-        date: `${MONTHS[mi].slice(0,3)} ${m[2]}–${m[3]}`
-      };
+      return `${DAYS_ABBR[d1.getDay()]}–${DAYS_ABBR[d2.getDay()]} ${MONTHS_ABBR[mi]} ${m[2]}–${m[3]}`;
     }
   }
-  return {
-    day: DAYS_ABBR[dateObj.getDay()],
-    date: `${MONTHS[dateObj.getMonth()].slice(0,3)} ${dateObj.getDate()}`
-  };
+
+  // Standard single date
+  return `${DAYS_ABBR[dateObj.getDay()]} ${MONTHS_ABBR[dateObj.getMonth()]} ${dateObj.getDate()}`;
 }
 
 function render() {
@@ -643,15 +638,14 @@ function render() {
 
     events.forEach(ev => {
       const past = !ev._collapsed && isPast(ev._dateObj);
-      const { day, date } = getDayCols(ev, ev._dateObj);
+      const dateCol = formatDateCol(ev, ev._dateObj);
       const titleHtml = ev.URL
         ? `<a href="${ev.URL}" target="_blank" rel="noopener">${ev.Title}</a>`
         : ev.Title;
       const ageHtml = ev['Age Range'] ? ` <span class="event-age">(${ev['Age Range']})</span>` : '';
 
       html += `<tr${past ? ' class="is-past"' : ''}>`;
-      html += `<td class="col-day">${day}</td>`;
-      html += `<td class="col-date">${date}</td>`;
+      html += `<td class="col-date">${dateCol}</td>`;
       html += `<td class="col-venue">${ev.Location || ''}</td>`;
       html += `<td class="col-title">${titleHtml}${ageHtml}</td>`;
       html += `</tr>`;
