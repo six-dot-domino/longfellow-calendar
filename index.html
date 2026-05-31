@@ -222,6 +222,55 @@
     letter-spacing: 0.04em;
   }
 
+  .filter-bar {
+    background: var(--teal-light);
+    border: 1px solid #b3d4d4;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    margin-bottom: 1.25rem;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .filter-bar-label { color: var(--ink-light); }
+
+  .filter-pill {
+    background: var(--white);
+    border: 1px solid #b3d4d4;
+    border-radius: 3px;
+    padding: 1px 8px;
+    font-size: 13px;
+    color: var(--teal);
+    font-weight: 500;
+  }
+
+  .filter-bar-clear {
+    margin-left: auto;
+    color: var(--teal);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+    background: none;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .filter-bar-clear:hover { opacity: 0.75; }
+
+  .btn.btn-active {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
   .category-nav {
     font-family: var(--font-ui);
     font-size: 13px;
@@ -382,6 +431,7 @@
 <main>
   <div class="loading" id="loading">Loading events…</div>
   <div id="results-summary" class="results-summary" style="display:none"></div>
+  <div id="filter-bar" style="display:none"></div>
   <div class="category-nav" id="category-nav" style="display:none"></div>
   <div id="calendar" style="display:none"></div>
   <div class="no-results" id="no-results" style="display:none">No events match your filters.</div>
@@ -630,6 +680,32 @@ function render() {
     ? `${totalEvents} event${totalEvents !== 1 ? 's' : ''} found`
     : `${totalEvents} upcoming events`;
 
+  const filterBarEl = document.getElementById('filter-bar');
+  const clearBtn = document.getElementById('clear-btn');
+  if (isFiltering) {
+    const pills = [];
+    if (fromVal && toVal && fromVal !== toVal) {
+      const f = new Date(fromVal + 'T00:00:00');
+      const t = new Date(toVal + 'T00:00:00');
+      pills.push(`${DAYS_ABBR[f.getDay()]} ${MONTHS_ABBR[f.getMonth()]} ${f.getDate()} – ${DAYS_ABBR[t.getDay()]} ${MONTHS_ABBR[t.getMonth()]} ${t.getDate()}`);
+    } else if (fromVal) {
+      const f = new Date(fromVal + 'T00:00:00');
+      pills.push(`${DAYS_ABBR[f.getDay()]} ${MONTHS_ABBR[f.getMonth()]} ${f.getDate()}`);
+    }
+    if (keyword) pills.push(`"${keyword}"`);
+    selectedVenues.forEach(v => pills.push(v));
+    if (showPast) pills.push('including past events');
+    const pillsHtml = pills.map(p => `<span class="filter-pill">${p}</span>`).join('');
+    filterBarEl.className = 'filter-bar';
+    filterBarEl.innerHTML = `<span class="filter-bar-label">Showing:</span> ${pillsHtml} <button class="filter-bar-clear" id="filter-bar-clear">Clear all filters</button>`;
+    filterBarEl.style.display = 'flex';
+    clearBtn.classList.add('btn-active');
+    document.getElementById('filter-bar-clear').addEventListener('click', clearFilters);
+  } else {
+    filterBarEl.style.display = 'none';
+    clearBtn.classList.remove('btn-active');
+  }
+
   catNav.innerHTML = activeCats.map((cat, i) =>
     `${i > 0 ? '<span class="sep">•</span>' : ''}<a href="#cat-${slugify(cat)}">${cat}</a>`
   ).join('');
@@ -720,6 +796,16 @@ function renderVenueTags() {
   ).join('');
 }
 
+function clearFilters() {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.getElementById('keyword-input').value = '';
+  document.getElementById('show-past').checked = false;
+  selectedVenues = []; renderVenueTags();
+  document.getElementById('venue-input').value = '';
+  render();
+}
+
 async function init() {
   try {
     const resp = await fetch(CSV_URL);
@@ -753,15 +839,7 @@ async function init() {
       if (!e.target.closest('.venue-wrapper')) document.getElementById('venue-dropdown').classList.remove('open');
     });
 
-    document.getElementById('clear-btn').addEventListener('click', () => {
-      document.getElementById('date-from').value = '';
-      document.getElementById('date-to').value = '';
-      document.getElementById('keyword-input').value = '';
-      document.getElementById('show-past').checked = false;
-      selectedVenues = []; renderVenueTags();
-      document.getElementById('venue-input').value = '';
-      render();
-    });
+    document.getElementById('clear-btn').addEventListener('click', clearFilters);
 
   } catch(e) {
     document.getElementById('loading').textContent = 'Could not load events. Please try again later.';
